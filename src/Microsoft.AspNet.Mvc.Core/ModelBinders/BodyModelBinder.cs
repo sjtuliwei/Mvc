@@ -60,7 +60,7 @@ namespace Microsoft.AspNet.Mvc.ModelBinding
             }
 
             var model = await formatter.ReadAsync(formatterContext);
-            return new ModelBindingResult(model, bindingContext.ModelName, isModelSet: true);
+            return new ModelBindingResult(model, string.Empty, isModelSet: true);
         }
     }
 }
