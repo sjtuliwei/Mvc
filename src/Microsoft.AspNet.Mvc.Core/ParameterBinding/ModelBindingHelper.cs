@@ -252,9 +252,9 @@ namespace Microsoft.AspNet.Mvc
                 throw new ArgumentException(message, nameof(modelType));
             }
 
-			ModelStateDictionaryUtility.ClearModelStateDictionary(modelState, modelType);
+            ModelStateDictionaryUtility.ClearModelStateDictionary(modelState, modelType);
 
-			var modelMetadata = metadataProvider.GetMetadataForType(modelType);
+            var modelMetadata = metadataProvider.GetMetadataForType(modelType);
             var operationBindingContext = new OperationBindingContext
             {
                 ModelBinder = modelBinder,
@@ -333,7 +333,7 @@ namespace Microsoft.AspNet.Mvc
         /// <param name="expressions">Expressions identifying the properties to allow for binding.</param>
         /// <returns>An expression which can be used with <see cref="IPropertyBindingPredicateProvider"/>.</returns>
         public static Expression<Func<ModelBindingContext, string, bool>> GetIncludePredicateExpression<TModel>(
-            string prefix, 
+            string prefix,
             Expression<Func<TModel, object>>[] expressions)
         {
             if (expressions.Length == 0)
