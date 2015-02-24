@@ -1209,8 +1209,7 @@ namespace Microsoft.AspNet.Mvc
                 throw new InvalidOperationException(message);
             }
 
-			ModelStateDictionaryUtility.ClearModelStateDictionary(ModelState);
-
+			ModelStateDictionaryUtility.ClearModelStateDictionary(ModelState, model.GetType());
 			var modelExplorer = MetadataProvider.GetModelExplorerForType(model.GetType(), model);
             var modelName = prefix ?? string.Empty;
             var validationContext = new ModelValidationContext(
