@@ -61,51 +61,59 @@ namespace Microsoft.AspNet.Mvc.Razor
             var descriptors = new List<TagHelperDirectiveDescriptor>();
 
             // For tag helpers, the @removeTagHelper only applies tag helpers that were added prior to it.
-            // Consequently we must visit tag helpers outside-in - furthest _GlobalImport first and nearest one last. This
-            // is different from the behavior of chunk merging where we visit the nearest one first and ignore chunks
-            // that were previously visited.
+            // Consequently we must visit tag helpers outside-in - furthest _GlobalImport first and nearest one last.
+            // This is different from the behavior of chunk merging where we visit the nearest one first and ignore
+            // chunks that were previously visited.
             var chunksFromGlobalImports = inheritedCodeTrees
                 .Reverse()
                 .SelectMany(tree => tree.Chunks);
             var chunksInOrder = defaultInheritedChunks.Concat(chunksFromGlobalImports);
             foreach (var chunk in chunksInOrder)
             {
-                if (chunk is AddTagHelperChunk)
+                // All TagHelperDirectiveDescriptors created here have undefined source locations because the source 
+                // that created them is not in the same file.
+
+                var addTagHelperChunk = chunk as AddTagHelperChunk;
+                if (addTagHelperChunk != null)
                 {
-                    var descriptor = CreateInheritedTagHelperDirectiveDescriptor(
-                        ((AddTagHelperChunk)chunk).LookupText,
+                    var descriptor = new TagHelperDirectiveDescriptor(
+                        addTagHelperChunk.LookupText,
+                        SourceLocation.Undefined,
                         TagHelperDirectiveType.AddTagHelper);
 
                     descriptors.Add(descriptor);
+
+                    continue;
                 }
-                else if (chunk is RemoveTagHelperChunk)
+
+                var removeTagHelperChunk = chunk as RemoveTagHelperChunk;
+                if (removeTagHelperChunk != null)
                 {
-                    var descriptor = CreateInheritedTagHelperDirectiveDescriptor(
-                        ((RemoveTagHelperChunk)chunk).LookupText,
+                    var descriptor = new TagHelperDirectiveDescriptor(
+                        removeTagHelperChunk.LookupText,
+                        SourceLocation.Undefined,
                         TagHelperDirectiveType.RemoveTagHelper);
 
                     descriptors.Add(descriptor);
+
+                    continue;
                 }
-                else if (chunk is TagHelperPrefixDirectiveChunk)
+
+                var tagHelperPrefixDirectiveChunk = chunk as TagHelperPrefixDirectiveChunk;
+                if (tagHelperPrefixDirectiveChunk != null)
                 {
-                    var descriptor = CreateInheritedTagHelperDirectiveDescriptor(
-                        ((TagHelperPrefixDirectiveChunk)chunk).Prefix,
+                    var descriptor = new TagHelperDirectiveDescriptor(
+                        tagHelperPrefixDirectiveChunk.Prefix,
+                        SourceLocation.Undefined,
                         TagHelperDirectiveType.TagHelperPrefix);
 
                     descriptors.Add(descriptor);
+
+                    continue;
                 }
             }
 
             return descriptors;
-        }
-
-        private static TagHelperDirectiveDescriptor CreateInheritedTagHelperDirectiveDescriptor(
-            string directiveText,
-            TagHelperDirectiveType directiveType)
-        {
-            // Inherited directive descriptors have undefined source locations because the source that created them
-            // is not in the same file.
-            return new TagHelperDirectiveDescriptor(directiveText, SourceLocation.Undefined, directiveType);
         }
 
         private class GlobalImportTagHelperDirectiveSpanVisitor : TagHelperDirectiveSpanVisitor
