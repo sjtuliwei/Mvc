@@ -612,7 +612,12 @@ namespace Microsoft.AspNet.Mvc.Test
         public void File_WithStream()
         {
             // Arrange
-            var controller = new TestableController();
+            var mockHttpContext = new Mock<DefaultHttpContext>();
+            mockHttpContext.Setup(x => x.Response.OnResponseCompleted(It.IsAny<Action<object>>(), It.IsAny<object>()));
+            var controller = new TestableController()
+            {
+                ActionContext = new ActionContext(mockHttpContext.Object, new RouteData(), new ActionDescriptor())
+            };
             var fileStream = Stream.Null;
 
             // Act
@@ -629,7 +634,13 @@ namespace Microsoft.AspNet.Mvc.Test
         public void File_WithStreamAndFileDownloadName()
         {
             // Arrange
-            var controller = new TestableController();
+            var mockHttpContext = new Mock<DefaultHttpContext>();
+            mockHttpContext.Setup(x => x.Response.OnResponseCompleted(It.IsAny<Action<object>>(), It.IsAny<object>()));
+
+            var controller = new TestableController()
+            {
+                ActionContext = new ActionContext(mockHttpContext.Object, new RouteData(), new ActionDescriptor())
+            };
             var fileStream = Stream.Null;
 
             // Act
