@@ -134,7 +134,7 @@ namespace Microsoft.Framework.DependencyInjection
             services.AddOptions();
             services.AddDataProtection();
             services.AddRouting();
-            services.AddCors(configuration);
+            services.AddCors();
             services.AddAuthorization(configuration);
             services.AddWebEncoders();
             services.Configure<RouteOptions>(routeOptions =>
