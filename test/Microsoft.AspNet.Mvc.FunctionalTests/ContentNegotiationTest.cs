@@ -409,6 +409,29 @@ namespace Microsoft.AspNet.Mvc.FunctionalTests
         }
 
         [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ObjectResult_WithStringReturnType_WritesTextPlainFormat(bool matchFormatterOnObjectType)
+        {
+            // Arrange
+            var server = TestHelper.CreateServer(_app, SiteName);
+            var client = server.CreateClient();
+            var targetUri = "http://localhost/FallbackOnTypeBasedMatch/ReturnString?matchFormatterOnObjectType=" + 
+                matchFormatterOnObjectType;
+            var request = new HttpRequestMessage(HttpMethod.Get, targetUri);
+            request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+            
+            // Act
+            var response = await client.SendAsync(request);
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("text/plain", response.Content.Headers.ContentType.MediaType);
+            var actualBody = await response.Content.ReadAsStringAsync();
+            Assert.Equal("Hello World!", actualBody);
+        }
+
+        [Theory]
         [InlineData("OverrideTheFallback_WithDefaultFormatters")]
         [InlineData("OverrideTheFallback_UsingCustomFormatters")]
         public async Task NoMatchOn_RequestContentType_SkipTypeMatchByAddingACustomFormatter(string actionName)

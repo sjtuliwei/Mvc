@@ -41,7 +41,7 @@ namespace Microsoft.AspNet.Mvc
         /// <summary>
         /// Gets or sets a flag to enable content-negotiation to select a formatter based on object type.
         /// </summary>
-        public bool? EnableContentNegotiationToMatchOnObjectType { get; set; }
+        public bool? MatchFormatterOnObjectType { get; set; }
 
         public override async Task ExecuteResultAsync(ActionContext context)
         {
@@ -141,9 +141,8 @@ namespace Microsoft.AspNet.Mvc
 
                     // This would be the case when no formatter could write the type base on the
                     // accept headers and the request content type. Fallback on type based match.
-                    var enableContentNegotiationToMatchOnObjectType =
-                        EnableContentNegotiationToMatchOnObjectType ?? options.EnableContentNegotiationToMatchOnObjectType;
-                    if (selectedFormatter == null && enableContentNegotiationToMatchOnObjectType)
+                    var matchFormatterOnObjectType = MatchFormatterOnObjectType ?? options.MatchFormatterOnObjectType;
+                    if (selectedFormatter == null && matchFormatterOnObjectType)
                     {
                         foreach (var formatter in formatters)
                         {

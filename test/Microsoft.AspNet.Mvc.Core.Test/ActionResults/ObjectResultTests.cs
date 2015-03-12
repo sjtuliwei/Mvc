@@ -651,24 +651,21 @@ namespace Microsoft.AspNet.Mvc.Core.Test.ActionResults
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public async Task ObjectResult_WithStringType_WritesTextPlainFormat(
-            bool enableContentNegotiationToMatchOnObjectType)
+        public async Task ObjectResult_WithStringType_WritesTextPlainFormat(bool matchFormatterOnObjectType)
         {
             // Arrange
-            var mvcOptions = new MvcOptions();
-            mvcOptions.EnableContentNegotiationToMatchOnObjectType = enableContentNegotiationToMatchOnObjectType;
             var expectedData = "Hello World!";
             var objectResult = new ObjectResult(expectedData);
             var outputFormatters = new IOutputFormatter[] {
-                new HttpNoContentOutputFormatter(),
                 new StringOutputFormatter(),
-                new JsonOutputFormatter(),
-                new XmlDataContractSerializerOutputFormatter()
+                new JsonOutputFormatter()
             };
             var response = new Mock<HttpResponse>();
             var responseStream = new MemoryStream();
             response.SetupGet(r => r.Body).Returns(responseStream);
 
+            var mvcOptions = new MvcOptions();
+            mvcOptions.MatchFormatterOnObjectType = matchFormatterOnObjectType;
             var actionContext = CreateMockActionContext(
                                     outputFormatters,
                                     response.Object,
@@ -690,14 +687,9 @@ namespace Microsoft.AspNet.Mvc.Core.Test.ActionResults
         {
             // Arrange
             var mvcOptions = new MvcOptions();
-            mvcOptions.EnableContentNegotiationToMatchOnObjectType = false;
+            mvcOptions.MatchFormatterOnObjectType = false;
             var objectResult = new ObjectResult(new Person() { Name = "John" });
-            var outputFormatters = new IOutputFormatter[] {
-                new HttpNoContentOutputFormatter(),
-                new StringOutputFormatter(),
-                new JsonOutputFormatter(),
-                new XmlDataContractSerializerOutputFormatter()
-            };
+            var outputFormatters = new IOutputFormatter[] { new JsonOutputFormatter() };
             var response = new Mock<HttpResponse>();
             var responseStream = new MemoryStream();
             response.SetupGet(r => r.Body).Returns(responseStream);
@@ -713,7 +705,8 @@ namespace Microsoft.AspNet.Mvc.Core.Test.ActionResults
             await objectResult.ExecuteResultAsync(actionContext);
 
             // Assert
-            response.VerifySet(x => x.ContentType = It.IsAny<string>(), Times.Never());
+            response.VerifySet(resp => resp.StatusCode = 406);
+            response.VerifySet(resp => resp.ContentType = It.IsAny<string>(), Times.Never());
             Assert.Equal(0, responseStream.Length);
         }
 
@@ -722,14 +715,10 @@ namespace Microsoft.AspNet.Mvc.Core.Test.ActionResults
         {
             // Arrange
             var mvcOptions = new MvcOptions();
-            mvcOptions.EnableContentNegotiationToMatchOnObjectType = false;
+            mvcOptions.MatchFormatterOnObjectType = false;
             var objectResult = new ObjectResult(new Person() { Name = "John" });
-            objectResult.EnableContentNegotiationToMatchOnObjectType = true;
-            var outputFormatters = new IOutputFormatter[] {
-                new HttpNoContentOutputFormatter(),
-                new StringOutputFormatter(),
-                new JsonOutputFormatter()
-            };
+            objectResult.MatchFormatterOnObjectType = true;
+            var outputFormatters = new IOutputFormatter[] { new JsonOutputFormatter() };
             var response = new Mock<HttpResponse>();
             var responseStream = new MemoryStream();
             response.SetupGet(r => r.Body).Returns(responseStream);

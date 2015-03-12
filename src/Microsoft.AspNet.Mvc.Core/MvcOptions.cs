@@ -147,7 +147,7 @@ namespace Microsoft.AspNet.Mvc
         /// Gets or sets a flag to enable content-negotiation to select a formatter based on object type.
         /// <c>true</c>, by default.
         /// </summary>
-        public bool EnableContentNegotiationToMatchOnObjectType { get; set; } = true;
+        public bool MatchFormatterOnObjectType { get; set; } = true;
 
         /// <summary>
         /// Gets a Dictionary of CacheProfile Names, <see cref="CacheProfile"/> which are pre-defined settings for

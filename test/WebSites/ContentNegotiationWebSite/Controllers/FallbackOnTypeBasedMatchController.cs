@@ -37,10 +37,17 @@ namespace ContentNegotiationWebSite
             return objectResult;
         }
 
+        public IActionResult ReturnString(bool matchFormatterOnObjectType)
+        {
+            var objectResult = new ObjectResult("Hello World!");
+            objectResult.MatchFormatterOnObjectType = matchFormatterOnObjectType;
+            return objectResult;
+        }
+
         public IActionResult OverrideTheFallback_UsingCustomFormatters(int input)
         {
             var objectResult = new ObjectResult(input);
-            objectResult.ExcludeFormatterMatchOnObjectTypeOnly = true;
+            objectResult.MatchFormatterOnObjectType = false;
             objectResult.Formatters.Add(new PlainTextFormatter());
             objectResult.Formatters.Add(new JsonOutputFormatter());
             return objectResult;
@@ -49,7 +56,7 @@ namespace ContentNegotiationWebSite
         public IActionResult OverrideTheFallback_WithDefaultFormatters(int input)
         {
             var objectResult = new ObjectResult(input);
-            objectResult.ExcludeFormatterMatchOnObjectTypeOnly = true;
+            objectResult.MatchFormatterOnObjectType = false;
             var formattersProvider = ActionContext.HttpContext.RequestServices.GetRequiredService<IOutputFormattersProvider>();
             foreach (var formatter in formattersProvider.OutputFormatters)
             {
