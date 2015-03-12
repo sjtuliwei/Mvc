@@ -151,5 +151,36 @@ namespace Microsoft.AspNet.Mvc.FunctionalTests
             Assert.NotNull(contentDisposition);
             Assert.Equal("attachment; filename=downloadName.txt; filename*=UTF-8''downloadName.txt", contentDisposition);
         }
+
+        [Theory]
+        [InlineData(
+            "http://localhost/EmbeddedFiles/DowloadFileWithFileName", 
+            "Sample text file as embedded resource.")]
+        [InlineData(
+            "http://localhost/EmbeddedFiles/DowloadNestedFileWithFileName", 
+            "Sample nested text file as embedded resource.")]
+        public async Task FileFromEmbeddedResources_ReturnsFileWithFileName(string url, string expectedBody)
+        {
+            // Arrange
+            var server = TestHelper.CreateServer(_app, SiteName);
+            var client = server.CreateClient();
+
+            // Act
+            var response = await client.GetAsync(url);
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            Assert.NotNull(response.Content.Headers.ContentType);
+            Assert.Equal("text/plain", response.Content.Headers.ContentType.ToString());
+
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.NotNull(body);
+            Assert.Equal(expectedBody, body);
+
+            var contentDisposition = response.Content.Headers.ContentDisposition.ToString();
+            Assert.NotNull(contentDisposition);
+            Assert.Equal("attachment; filename=downloadName.txt; filename*=UTF-8''downloadName.txt", contentDisposition);
+        }
     }
 }

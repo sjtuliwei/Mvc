@@ -1,0 +1,1 @@
+﻿Sample nested text file as embedded resource.

@@ -80,57 +80,36 @@ namespace Microsoft.AspNet.Mvc
         /// <inheritdoc />
         protected override Task WriteFileAsync(HttpResponse response, CancellationToken cancellation)
         {
-            var sendFile = response.HttpContext.GetFeature<IHttpSendFileFeature>();
+            var filePath = NormalizePath(FileName);
 
-            var fileProvider = GetFileProvider(response.HttpContext.RequestServices);
-
-            var filePath = ResolveFilePath(fileProvider);
-
-            if (sendFile != null)
+            if (IsPathRooted(filePath))
             {
-                return sendFile.SendFileAsync(
-                    filePath,
-                    offset: 0,
-                    length: null,
-                    cancellation: cancellation);
+                return CopyPhysicalFileToResponseAsync(response, filePath, cancellation);
             }
             else
             {
-                return CopyStreamToResponse(filePath, response, cancellation);
+                var fileProvider = GetFileProvider(response.HttpContext.RequestServices);
+                var fileInfo = fileProvider.GetFileInfo(subpath: filePath);
+                if (fileInfo.Exists)
+                {
+                    if (fileInfo.PhysicalPath != null)
+                    {
+                        return CopyPhysicalFileToResponseAsync(response, fileInfo.PhysicalPath, cancellation);
+                    }
+                    else
+                    {
+                        // Example: An embedded resource
+                        return CopyStreamToResponseAsync(fileInfo.CreateReadStream(), response, cancellation);
+                    }
+                }
+                else
+                {
+                    var message = Resources.FormatFileResult_InvalidPath(fileInfo.PhysicalPath);
+                    throw new FileNotFoundException(message, fileInfo.PhysicalPath);
+                }
             }
         }
-
-        internal string ResolveFilePath(IFileProvider fileProvider)
-        {
-            // Let the file system try to get the file and if it can't,
-            // fallback to trying the path directly unless the path starts with '/'.
-            // In that case we consider it relative and won't try to resolve it as
-            // a full path
-
-            var path = NormalizePath(FileName);
-
-            if (IsPathRooted(path))
-            {
-                // The path is absolute
-                // C:\...\file.ext
-                // C:/.../file.ext
-                return path;
-            }
-
-            var fileInfo = fileProvider.GetFileInfo(path);
-            if (fileInfo.Exists)
-            {
-                // The path is relative and IFileProvider found the file, so return the full
-                // path.
-                return fileInfo.PhysicalPath;
-            }
-
-            // We are absolutely sure the path is relative, and couldn't find the file
-            // on the file system.
-            var message = Resources.FormatFileResult_InvalidPath(path);
-            throw new FileNotFoundException(message, path);
-        }
-
+        
         /// <summary>
         /// Creates a normalized representation of the given <paramref name="path"/>. The default
         /// implementation doesn't support files with '\' in the file name and treats the '\' as
@@ -208,7 +187,33 @@ namespace Microsoft.AspNet.Mvc
             return FileProvider;
         }
 
-        private static async Task CopyStreamToResponse(
+        private Task CopyPhysicalFileToResponseAsync(
+            HttpResponse response,
+            string physicalFilePath,
+            CancellationToken cancellationToken)
+        {
+            if (!File.Exists(physicalFilePath))
+            {
+                var message = Resources.FormatFileResult_InvalidPath(physicalFilePath);
+                throw new FileNotFoundException(message, physicalFilePath);
+            }
+
+            var sendFile = response.HttpContext.GetFeature<IHttpSendFileFeature>();
+            if (sendFile != null)
+            {
+                return sendFile.SendFileAsync(
+                    physicalFilePath,
+                    offset: 0,
+                    length: null,
+                    cancellation: cancellationToken);
+            }
+            else
+            {
+                return CopyStreamToResponseAsync(physicalFilePath, response, cancellationToken);
+            }
+        }
+
+        private static Task CopyStreamToResponseAsync(
             string fileName,
             HttpResponse response,
             CancellationToken cancellation)
@@ -220,9 +225,17 @@ namespace Microsoft.AspNet.Mvc
                 DefaultBufferSize,
                 FileOptions.Asynchronous | FileOptions.SequentialScan);
 
-            using (fileStream)
+            return CopyStreamToResponseAsync(fileStream, response, cancellation);
+        }
+
+        private static async Task CopyStreamToResponseAsync(
+            Stream sourceStream,
+            HttpResponse response,
+            CancellationToken cancellation)
+        {
+            using (sourceStream)
             {
-                await fileStream.CopyToAsync(response.Body, DefaultBufferSize, cancellation);
+                await sourceStream.CopyToAsync(response.Body, DefaultBufferSize, cancellation);
             }
         }
     }

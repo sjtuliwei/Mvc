@@ -210,7 +210,7 @@ namespace Microsoft.AspNet.Mvc
             };
 
             // Act
-            var result = filePathResult.ResolveFilePath(fileProvider);
+            var result = filePathResult.GetPhysicalFilePath(fileProvider);
 
             // Assert
             Assert.Equal(expectedPath, result);
@@ -231,7 +231,7 @@ namespace Microsoft.AspNet.Mvc
             };
 
             // Act
-            var ex = Assert.Throws<FileNotFoundException>(() => filePathResult.ResolveFilePath(fileProvider));
+            var ex = Assert.Throws<FileNotFoundException>(() => filePathResult.GetPhysicalFilePath(fileProvider));
 
             // Assert
             Assert.Equal("Could not find file: " + path, ex.Message);
@@ -281,7 +281,7 @@ namespace Microsoft.AspNet.Mvc
             var expectedMessage = "Could not find file: " + expectedFileName;
 
             // Act
-            var ex = Assert.Throws<FileNotFoundException>(() => filePathResult.ResolveFilePath(fileProvider));
+            var ex = Assert.Throws<FileNotFoundException>(() => filePathResult.GetPhysicalFilePath(fileProvider));
 
             // Assert
             Assert.Equal(expectedMessage, ex.Message);
